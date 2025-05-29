@@ -74,7 +74,6 @@ $app->get('/equipments', function (Request $request, Response $response) {
         ->withStatus(200);
 });
 
-// POST /dispatch - Send an urgent logistics message to RabbitMQ
 $app->post('/dispatch', function (Request $request, Response $response) {
     $data = $request->getParsedBody();
     

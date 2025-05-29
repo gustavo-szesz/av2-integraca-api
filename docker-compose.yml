@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: api-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - api-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: api-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    restart: unless-stopped
+    networks:
+      - api-network
+  
+  sensores-api:
+    build:
+      context: ./sensores-api
+      dockerfile: Dockerfile
+    container_name: sensores-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      - PYTHON_API_URL=http://alertas-api:3001
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - api-network
+      
+  alertas-api:
+    build:
+      context: ./alertas-api
+      dockerfile: Dockerfile
+    container_name: alertas-api
+    ports:
+      - "3001:3001"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - redis
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - api-network
+
+  logistica-api:
+    build:
+      context: ./logistica-api
+      dockerfile: Dockerfile
+    container_name: logistica-api
+    ports:
+      - "3004:3003"  # Changed from "3003:3003" to "3004:3003"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - api-network
+
+networks:
+  api-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  rabbitmq-data:

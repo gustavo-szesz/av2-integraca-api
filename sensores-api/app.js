@@ -24,7 +24,7 @@ app.use(express.json());
 
 app.get('/sensor-data', async (req, res) => {
   try {
-    // Try to get data from cache
+    // reber do cache
     const cachedData = await getAsync('sensor-data');
     
     if (cachedData) {
@@ -32,14 +32,14 @@ app.get('/sensor-data', async (req, res) => {
       return res.json(JSON.parse(cachedData));
     }
     
-    // If no cache, generate new simulated data
+    // gera novos dados, caso nao esteja no cache
     const sensorData = {
       timestamp: new Date().toISOString(),
       temperature: Math.random() * 30 + 10, // 10-40°C
       pressure: Math.random() * 50 + 950,   // 950-1000 hPa
     };
     
-    // Store in cache
+    // grava o cache
     await setAsync('sensor-data', JSON.stringify(sensorData), 'EX', CACHE_EXPIRATION);
     console.log('Generated new sensor data and cached it');
     
@@ -56,7 +56,7 @@ app.post('/alert', async (req, res) => {
     console.log('Alerta recebido:', alertData);
     
     try {
-        // Forward the alert to the Python API
+        // envia o alerta para a API Python
         const response = await axios.post(`${PYTHON_API_URL}/event`, alertData);
         console.log('Alert forwarded to Python API, response:', response.data);
         

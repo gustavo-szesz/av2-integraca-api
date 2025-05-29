@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Redis configuration
+# Redis 
 redis_client = redis.Redis(
     host=os.environ.get('REDIS_HOST', 'localhost'),
     port=int(os.environ.get('REDIS_PORT', 6379)),
     decode_responses=True
 )
 
-# In-memory storage for events (backup if Redis is unavailable)
+# armazenamento em memória para eventos
 events = []
 
 def get_events_from_cache():
@@ -108,17 +108,15 @@ def receive_event():
     if not request.is_json:
         return jsonify({"error": "Invalid JSON"}), 400
     
-    # Get data from request
+    # recebe os dados do evento
     event_data = request.get_json()
     
-    # Add timestamp and source
+    #  timestamp and source
     event_data['received_at'] = datetime.now().isoformat()
     event_data['source'] = 'http'
-    
-    # Store event in memory
     events.append(event_data)
     
-    # Update cache
+    # atualiza o cache
     update_events_cache()
     
     logger.info(f"Event received via HTTP: {event_data}")
